@@ -1,6 +1,7 @@
 let data = [];
 let regionInfo = [];
 let uniqueNames = [];
+let selectedIndex = -1;
 
 function cleanName(name) {
     return name.replace(/\s*x\d+$/, '').trim();
@@ -41,16 +42,39 @@ function populateAutocomplete(query) {
         name.toLowerCase().includes(query.toLowerCase())
     );
 
-    matches.slice(0, 10).forEach(name => {
-        const li = document.createElement("li");
-        li.className = "autocomplete-item";
-        li.textContent = name;
-        li.onclick = () => {
-            document.getElementById("searchInput").value = name;
-            list.innerHTML = "";
-            searchResults(name);
-        };
-        list.appendChild(li);
+    if (matches.length > 0) {
+        list.style.display = "block";
+        matches.slice(0, 10).forEach((name, index) => {
+            const li = document.createElement("li");
+            li.className = "autocomplete-item";
+            li.textContent = name;
+            li.onclick = () => {
+                document.getElementById("searchInput").value = name;
+                list.innerHTML = "";
+                searchResults(name);
+            };
+            li.onmouseover = () => {
+                selectedIndex = index;
+                highlightSelection();
+            };
+            li.onmouseleave = () => {
+                li.classList.remove("selected");
+            };
+            list.appendChild(li);
+        });
+    } else {
+        list.style.display = "none";
+    }
+}
+
+function highlightSelection() {
+    const items = document.querySelectorAll('.autocomplete-item');
+    items.forEach((item, index) => {
+        if (index === selectedIndex) {
+            item.classList.add("selected");
+        } else {
+            item.classList.remove("selected");
+        }
     });
 }
 
@@ -96,10 +120,17 @@ function searchResults(query) {
     }
 }
 
+window.onload = function() {
+    // 페이지가 로드되면 검색 입력창에 포커스
+    document.getElementById("searchInput").focus();
+};
+
 document.getElementById("searchForm").addEventListener("submit", function (e) {
     e.preventDefault();
     const query = document.getElementById("searchInput").value.trim();
     if (query !== "") {
+        // 검색할 때마다 selectedIndex 초기화
+        selectedIndex = -1;
         searchResults(query);
         document.getElementById("autocompleteList").innerHTML = "";
     }
@@ -107,6 +138,27 @@ document.getElementById("searchForm").addEventListener("submit", function (e) {
 
 document.getElementById("searchInput").addEventListener("input", function () {
     populateAutocomplete(this.value.trim());
+});
+
+document.getElementById("searchInput").addEventListener("keydown", function (e) {
+    const list = document.getElementById("autocompleteList");
+    const items = list.querySelectorAll('.autocomplete-item');
+    if (e.key === "ArrowDown") {
+        if (selectedIndex < items.length - 1) {
+            selectedIndex++;
+            highlightSelection();
+        }
+    } else if (e.key === "ArrowUp") {
+        if (selectedIndex > 0) {
+            selectedIndex--;
+            highlightSelection();
+        }
+    } else if (e.key === "Enter" && selectedIndex !== -1) {
+        const selectedItem = items[selectedIndex];
+        document.getElementById("searchInput").value = selectedItem.textContent;
+        list.innerHTML = "";
+        searchResults(selectedItem.textContent);
+    }
 });
 
 document.addEventListener("click", function (e) {
