@@ -91,10 +91,15 @@ function searchResults(query) {
     data.forEach(entry => {
         const itemName = cleanName(entry["아이템명"]);
         const needItem = cleanName(entry["필요 아이템"]);
+        const npcName = cleanName(entry["NPC"]);
         const itemNameClean = itemName.replace(/\s+/g, "").toLowerCase();
         const needItemClean = needItem.replace(/\s+/g, "").toLowerCase();
+        const npcNameClean = npcName.replace(/\s+/g, "").toLowerCase();
 
-        if (itemNameClean.includes(cleanQuery) || needItemClean.includes(cleanQuery)) {
+        if (itemNameClean.includes(cleanQuery)
+            || needItemClean.includes(cleanQuery)
+            || npcNameClean.includes(cleanQuery)
+            || regionInfo.some((region) => {return region.도시.includes(cleanQuery);})) {
             found = true;
             const regionPath = getRegionPath(entry["NPC"]);
             const card = `
@@ -102,7 +107,7 @@ function searchResults(query) {
           <h5>${highlightText(entry["아이템명"], query)}</h5>
           <p>필요 아이템: ${highlightText(entry["필요 아이템"], query)}</p>
           <p>구매 제한: ${entry["구매 제한"]}</p>
-          <p class="mt-2">${regionPath}</p>
+          <p class="mt-2">${highlightText(regionPath, query)}</p>
           <span class="hashtag">#물물교환</span>
         </div>
       `;
